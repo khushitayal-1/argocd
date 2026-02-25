@@ -14,8 +14,8 @@ spec:
     spec:
       containers:
         - name: user
-          image: user-service:latest
-          imagePullPolicy: Never
+          image: docker push khushiagrawal794/user-service:tagname
+          imagePullPolicy: Always
           ports:
             - containerPort: 5000
 ---

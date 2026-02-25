@@ -14,8 +14,8 @@ spec:
     spec:
       containers:
         - name: order
-          image: order-service:latest
-          imagePullPolicy: Never
+          image: docker push khushiagrawal794/order-service:tagname
+          imagePullPolicy: Always
           ports:
             - containerPort: 5001
           env:

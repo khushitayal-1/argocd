@@ -1,0 +1,23 @@
+name: Microservice CI
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Build
+        run: docker --version
+
+      - name: Build order-service
+        run: docker build -t order-service ./order-service
+
+      - name: Build user-service
+        run: docker build -t user-service ./user-service

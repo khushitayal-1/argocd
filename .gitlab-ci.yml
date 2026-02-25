@@ -1,0 +1,18 @@
+stages:
+  - build
+
+build_order:
+  stage: build
+  image: docker:24
+  services:
+    - docker:24-dind
+  script:
+    - docker build -t order-service ./order-service
+
+build_user:
+  stage: build
+  image: docker:24
+  services:
+    - docker:24-dind
+  script:
+    - docker build -t user-service ./user-service

@@ -1,0 +1,18 @@
+version: "3.8"
+
+services:
+  user-service:
+    build: ./user-service
+    container_name: user-service
+    ports:
+      - "3001:3001"
+
+  api-service:
+    build: ./api-service
+    container_name: api-service
+    ports:
+      - "3000:3000"
+    depends_on:
+      - user-service
+    environment:
+      - USER_SERVICE_URL=http://user-service:3001

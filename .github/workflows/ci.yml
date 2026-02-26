@@ -1,23 +1,85 @@
-name: Microservice CI
+name: Microservice CI/CD
 
 on:
   push:
     branches:
       - main
+  pull_request:
+    branches:
+      - main
+
+env:
+  REGISTRY: docker.io
+  IMAGE_REGISTRY_USER: ${{ secrets.DOCKER_USERNAME }}
+  IMAGE_NAME: ${{ secrets.DOCKER_USERNAME }}
 
 jobs:
   build:
     runs-on: ubuntu-latest
-
+    strategy:
+      matrix:
+        service: [user-service, order-service]
+    
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Docker Build
-        run: docker --version
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
 
-      - name: Build order-service
-        run: docker build -t order-service ./order-service
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Build user-service
-        run: docker build -t user-service ./user-service
+      - name: Build and push ${{ matrix.service }}
+        uses: docker/build-push-action@v4
+        with:
+          context: ./${{ matrix.service }}
+          push: ${{ github.ref == 'refs/heads/main' && github.event_name == 'push' }}
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/${{ matrix.service }}:latest
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/${{ matrix.service }}:${{ github.sha }}
+          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/${{ matrix.service }}:buildcache
+          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/${{ matrix.service }}:buildcache,mode=max
+
+  test:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Validate Kubernetes manifests
+        run: |
+          # Check if kubectl is available
+          which kubectl || (curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl" && chmod +x kubectl)
+          # Validate YAML syntax for k8s manifests
+          for file in k8s/*.yaml; do
+            echo "Validating $file"
+            ./kubectl apply -f "$file" --validate=client --dry-run=client || exit 1
+          done
+
+      - name: Validate network policies
+        run: |
+          for file in k8s/network-policies/*.yaml; do
+            if [ -f "$file" ]; then
+              echo "Validating $file"
+              ./kubectl apply -f "$file" --validate=client --dry-run=client || exit 1
+            fi
+          done
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Trigger ArgoCD sync
+        run: |
+          echo "ArgoCD Application is configured to auto-sync from Git."
+          echo "Changes pushed to main branch will trigger automatic deployment."
+          echo "Visit https://argocd.example.com to monitor deployments."

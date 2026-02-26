@@ -1,0 +1,117 @@
+---
+# Pod A in namespace-a (can communicate with Pod B)
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-a
+  namespace: namespace-a
+  labels:
+    app: pod-a
+spec:
+  containers:
+    - name: pod-a
+      image: nicolaka/netshoot:latest
+      command: ["sleep", "3600"]
+      resources:
+        requests:
+          cpu: 100m
+          memory: 128Mi
+        limits:
+          cpu: 200m
+          memory: 256Mi
+
+---
+# Pod A Service for exposure
+apiVersion: v1
+kind: Service
+metadata:
+  name: pod-a-svc
+  namespace: namespace-a
+  labels:
+    app: pod-a
+spec:
+  selector:
+    app: pod-a
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
+
+---
+# Simple HTTP server Pod B in namespace-b
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-b
+  namespace: namespace-b
+  labels:
+    app: pod-b
+spec:
+  containers:
+    - name: pod-b
+      image: httpbin/httpbin:latest
+      ports:
+        - containerPort: 8080
+      resources:
+        requests:
+          cpu: 100m
+          memory: 128Mi
+        limits:
+          cpu: 200m
+          memory: 256Mi
+
+---
+# Pod B Service (only accessible via NetworkPolicy from Pod A)
+apiVersion: v1
+kind: Service
+metadata:
+  name: pod-b-svc
+  namespace: namespace-b
+  labels:
+    app: pod-b
+spec:
+  selector:
+    app: pod-b
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
+
+---
+# Pod C in namespace-c (isolated, no communication allowed)
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-c
+  namespace: namespace-c
+  labels:
+    app: pod-c
+spec:
+  containers:
+    - name: pod-c
+      image: nicolaka/netshoot:latest
+      command: ["sleep", "3600"]
+      resources:
+        requests:
+          cpu: 100m
+          memory: 128Mi
+        limits:
+          cpu: 200m
+          memory: 256Mi
+
+---
+# Pod C Service (completely isolated)
+apiVersion: v1
+kind: Service
+metadata:
+  name: pod-c-svc
+  namespace: namespace-c
+  labels:
+    app: pod-c
+spec:
+  selector:
+    app: pod-c
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080

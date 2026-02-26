@@ -1,0 +1,155 @@
+---
+# Scenario 1: Pod A in namespace-a can communicate with Pod B in namespace-b
+# But cannot communicate with Pod C in namespace-c
+
+# Default deny all ingress policy for namespace-a (Pod A)
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-ingress
+  namespace: namespace-a
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+  ingress: []  # Empty ingress means no traffic is allowed
+
+---
+# Allow Pod A (namespace-a) to initiate egress to Pod B (namespace-b)
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-egress-to-namespace-b
+  namespace: namespace-a
+spec:
+  podSelector:
+    matchLabels:
+      app: pod-a
+  policyTypes:
+    - Egress
+  egress:
+    # Allow DNS
+    - to:
+        - namespaceSelector: {}
+      ports:
+        - protocol: TCP
+          port: 53
+        - protocol: UDP
+          port: 53
+    # Allow communication to Pod B in namespace-b
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              name: namespace-b
+          podSelector:
+            matchLabels:
+              app: pod-b
+      ports:
+        - protocol: TCP
+          port: 8080
+
+---
+# Deny all egress to namespace-c (Pod C)
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: deny-egress-to-namespace-c
+  namespace: namespace-a
+spec:
+  podSelector:
+    matchLabels:
+      app: pod-a
+  policyTypes:
+    - Egress
+  egress: []  # This must come after explicit allows, so we'll handle it differently
+
+---
+# Namespace B: Allow ingress from Pod A (namespace-a)
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-ingress-from-namespace-a
+  namespace: namespace-b
+spec:
+  podSelector:
+    matchLabels:
+      app: pod-b
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              name: namespace-a
+          podSelector:
+            matchLabels:
+              app: pod-a
+      ports:
+        - protocol: TCP
+          port: 8080
+
+---
+# Namespace B: Allow egress responses back to Pod A
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-egress-to-namespace-a
+  namespace: namespace-b
+spec:
+  podSelector:
+    matchLabels:
+      app: pod-b
+  policyTypes:
+    - Egress
+  egress:
+    # Allow responses to Pod A
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              name: namespace-a
+          podSelector:
+            matchLabels:
+              app: pod-a
+      ports:
+        - protocol: TCP
+          port: 8080
+    # Allow DNS
+    - to:
+        - namespaceSelector: {}
+      ports:
+        - protocol: TCP
+          port: 53
+        - protocol: UDP
+          port: 53
+
+---
+# Namespace C: Deny all ingress and egress for Pod C (isolated)
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-all
+  namespace: namespace-c
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress: []
+  egress: []
+
+---
+# Pod C: Explicit deny policy
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: deny-pod-c
+  namespace: namespace-c
+spec:
+  podSelector:
+    matchLabels:
+      app: pod-c
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress: []
+  egress: []

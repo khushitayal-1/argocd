@@ -1,0 +1,24 @@
+---
+# Namespace definitions for network policy testing
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: namespace-a
+  labels:
+    name: namespace-a
+
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: namespace-b
+  labels:
+    name: namespace-b
+
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: namespace-c
+  labels:
+    name: namespace-c

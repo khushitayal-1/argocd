@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: order
-          image: khushiagrawal794/order-service:latest
+          image: khushiagrawal794/order-service:9409f709384f465be1980ebb845f395aa573573a
           imagePullPolicy: Always
           ports:
             - containerPort: 5001

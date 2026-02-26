@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: order
-          image: docker push khushiagrawal794/order-service:tagname
+          image: docker push khushiagrawal794/order-service:${GITHUB_SHA}
           imagePullPolicy: Always
           ports:
             - containerPort: 5001
@@ -29,7 +29,7 @@ metadata:
 spec:
   type: NodePort
   selector:
-    app: order-service
+    app: order-service 
   ports:
     - port: 5001
       targetPort: 5001

@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: user
-          image: khushiagrawal794/user-service:latest
+          image: khushiagrawal794/user-service:6b0d0055a05a87985d6ec5182cfbd82393494a1f
           imagePullPolicy: Always
           ports:
             - containerPort: 5000

@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: user
-          image: docker push khushiagrawal794/user-service:${GITHUB_SHA}
+          image: khushiagrawal794/order-service:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 5000

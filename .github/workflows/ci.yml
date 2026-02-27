@@ -17,29 +17,59 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+      
       - name: Login to DockerHub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Build & Push Image
+      - name: Build & Push image for ${{ matrix.service }}
         uses: docker/build-push-action@v5
         with:
           context: ./${{ matrix.service }}
           push: true
           tags: |
             ${{ secrets.DOCKER_USERNAME }}/${{ matrix.service }}:${{ github.sha }}
-      - name: Update Kubernetes manifest
+            ${{ secrets.DOCKER_USERNAME }}/${{ matrix.service }}:latest
+
+  update-manifests:
+    runs-on: ubuntu-latest
+    needs: build
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Update all image tags in k8s/deployments.yaml
         run: |
-          sed -i "s|image: docker.io/${{ secrets.DOCKER_USERNAME }}/${{ matrix.service }}:.*|image: docker.io/${{ secrets.DOCKER_USERNAME }}/${{ matrix.service }}:${{ github.sha }}|" k8s/deployments.yaml
-          cat k8s/deployments.yaml | grep "image: docker.io"
-      - name: Commit and push changes
+          sed -i "s|image: docker.io/${{ secrets.DOCKER_USERNAME }}/user-service:.*|image: docker.io/${{ secrets.DOCKER_USERNAME }}/user-service:${{ github.sha }}|" k8s/deployments.yaml
+          sed -i "s|image: docker.io/${{ secrets.DOCKER_USERNAME }}/order-service:.*|image: docker.io/${{ secrets.DOCKER_USERNAME }}/order-service:${{ github.sha }}|" k8s/deployments.yaml
+          echo "Updated images to tag: ${{ github.sha }}"
+          grep "image: docker.io" k8s/deployments.yaml
+      
+      - name: Commit and push manifest changes
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git add k8s/deployments.yaml
-          git commit -m "chore: update image tag to ${{ github.sha }}"
-          git push https://${{ github.actor }}:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git HEAD:${{ github.ref }}
+          git commit -m "chore: update image tags to ${{ github.sha }}" || echo "No changes to commit"
+          git push https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git HEAD:${{ github.ref }} || echo "Already up to date"
+  
+  test:
+    runs-on: ubuntu-latest
+    needs: update-manifests
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Validate Kubernetes manifests
+        run: |
+          # Check if kubectl is available, otherwise install it
+          which kubectl || (curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl" && chmod +x kubectl && sudo mv kubectl /usr/local/bin/)
+          # Validate YAML syntax
+          for file in k8s/*.yaml; do
+            echo "Validating $file"
+            kubectl apply -f "$file" --validate=client --dry-run=client || exit 1
+          done

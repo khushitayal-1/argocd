@@ -66,10 +66,14 @@ jobs:
       
       - name: Validate Kubernetes manifests
         run: |
-          # Check if kubectl is available, otherwise install it
+          # Install kubectl if needed
           which kubectl || (curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl" && chmod +x kubectl && sudo mv kubectl /usr/local/bin/)
-          # Validate YAML syntax
+          
+          # Validate YAML syntax using dry-run
+          echo "Validating k8s manifest files..."
           for file in k8s/*.yaml; do
-            echo "Validating $file"
-            kubectl apply -f "$file" --validate=client --dry-run=client || exit 1
+            echo "Checking: $file"
+            kubectl apply -f "$file" --dry-run=client -o yaml > /dev/null || exit 1
           done
+          
+          echo "✅ All manifests validated successfully"

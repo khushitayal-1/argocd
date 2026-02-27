@@ -32,11 +32,14 @@ jobs:
             ${{ secrets.DOCKER_USERNAME }}/${{ matrix.service }}:${{ github.sha }}
       - name: Update Kubernetes manifest
         run: |
-         sed -i "s|image: .*|image: ${{ secrets.DOCKER_USERNAME }}/${{ matrix.service }}:${{ github.sha }}|" k8s/deployments.yaml
+          sed -i "s|image: docker.io/${{ secrets.DOCKER_USERNAME }}/${{ matrix.service }}:.*|image: docker.io/${{ secrets.DOCKER_USERNAME }}/${{ matrix.service }}:${{ github.sha }}|" k8s/deployments.yaml
+          cat k8s/deployments.yaml | grep "image: docker.io"
       - name: Commit and push changes
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-         git config --global user.name "github-actions"
-         git config --global user.email "actions@github.com"
-         git add .
-         git commit -m "Update image tag"
-         git push
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add k8s/deployments.yaml
+          git commit -m "chore: update image tag to ${{ github.sha }}"
+          git push https://${{ github.actor }}:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git HEAD:${{ github.ref }}

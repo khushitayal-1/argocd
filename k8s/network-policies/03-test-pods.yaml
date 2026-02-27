@@ -34,8 +34,8 @@ spec:
     app: pod-a
   ports:
     - protocol: TCP
-      port: 8080
-      targetPort: 8080
+      port: 80
+      targetPort: 80
 
 ---
 # Simple HTTP server Pod B in namespace-b
@@ -49,9 +49,9 @@ metadata:
 spec:
   containers:
     - name: pod-b
-      image: httpbin/httpbin:latest
+      image: kennethreitz/httpbin
       ports:
-        - containerPort: 8080
+        - containerPort: 80
       resources:
         requests:
           cpu: 100m
@@ -74,8 +74,8 @@ spec:
     app: pod-b
   ports:
     - protocol: TCP
-      port: 8080
-      targetPort: 8080
+      port: 80
+      targetPort: 80
 
 ---
 # Pod C in namespace-c (isolated, no communication allowed)
@@ -113,5 +113,5 @@ spec:
     app: pod-c
   ports:
     - protocol: TCP
-      port: 8080
-      targetPort: 8080
+      port: 80
+      targetPort: 80

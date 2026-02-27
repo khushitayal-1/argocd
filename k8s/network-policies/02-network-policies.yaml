@@ -46,7 +46,7 @@ spec:
               app: pod-b
       ports:
         - protocol: TCP
-          port: 8080
+          port: 80
 
 ---
 # Deny all egress to namespace-c (Pod C)
@@ -86,7 +86,7 @@ spec:
               app: pod-a
       ports:
         - protocol: TCP
-          port: 8080
+          port: 80
 
 ---
 # Namespace B: Allow egress responses back to Pod A
@@ -112,7 +112,7 @@ spec:
               app: pod-a
       ports:
         - protocol: TCP
-          port: 8080
+          port: 80
     # Allow DNS
     - to:
         - namespaceSelector: {}

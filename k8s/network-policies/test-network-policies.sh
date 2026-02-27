@@ -78,7 +78,7 @@ PASS=0
 FAIL=0
 
 # Test 1: Pod A -> Pod B (should succeed)
-if test_communication "pod-a" "namespace-a" "pod-b-svc" "namespace-b" "8080" "true"; then
+    if test_communication "pod-a" "namespace-a" "pod-b-svc" "namespace-b" "80" "true"; then
     PASS=$((PASS+1))
 else
     FAIL=$((FAIL+1))
@@ -87,7 +87,7 @@ fi
 echo ""
 
 # Test 2: Pod A -> Pod C (should fail)
-if test_communication "pod-a" "namespace-a" "pod-c-svc" "namespace-c" "8080" "false"; then
+if test_communication "pod-a" "namespace-a" "pod-c-svc" "namespace-c" "80" "false"; then
     PASS=$((PASS+1))
 else
     FAIL=$((FAIL+1))

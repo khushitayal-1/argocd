@@ -17,7 +17,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-
       - name: Login to DockerHub
         uses: docker/login-action@v3
         with:
@@ -33,7 +32,7 @@ jobs:
             ${{ secrets.DOCKER_USERNAME }}/${{ matrix.service }}:${{ github.sha }}
       - name: Update Kubernetes manifest
         run: |
-         sed -i "s|image: .*|image: ${{ secrets.DOCKER_USERNAME }}/${{ matrix.service }}:${{ github.sha }}|" k8s/${{ matrix.service }}-deployment.yaml
+         sed -i "s|image: .*|image: ${{ secrets.DOCKER_USERNAME }}/${{ matrix.service }}:${{ github.sha }}|" k8s/deployments.yaml
       - name: Commit and push changes
         run: |
          git config --global user.name "github-actions"

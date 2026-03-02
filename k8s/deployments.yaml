@@ -29,7 +29,7 @@ spec:
           image: docker.io/khushiagrawal794/user-service:latest
           imagePullPolicy: Always
           ports:
-            - name: http
+            - name: http 
               containerPort: 5000
               protocol: TCP
           env:
@@ -109,7 +109,7 @@ spec:
     apiVersion: apps/v1
     kind: Deployment
     name: user-service
-  minReplicas: 2
+  minReplicas: 1
   maxReplicas: 5
   metrics:
     - type: Resource
@@ -235,7 +235,7 @@ spec:
     apiVersion: apps/v1
     kind: Deployment
     name: order-service
-  minReplicas: 2
+  minReplicas: 1
   maxReplicas: 5
   metrics:
     - type: Resource

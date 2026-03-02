@@ -29,7 +29,7 @@ spec:
           image: docker.io/khushiagrawal794/user-service:latest
           imagePullPolicy: Always
           ports:
-            - name: http 
+            - name: http
               containerPort: 5000
               protocol: TCP
           env:
@@ -117,7 +117,7 @@ spec:
         name: cpu
         target:
           type: Utilization
-          averageUtilization: 70
+          averageUtilization: 80
     - type: Resource
       resource:
         name: memory
@@ -243,7 +243,7 @@ spec:
         name: cpu
         target:
           type: Utilization
-          averageUtilization: 70
+          averageUtilization: 80
     - type: Resource
       resource:
         name: memory

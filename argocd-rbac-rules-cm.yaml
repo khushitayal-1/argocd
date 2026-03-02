@@ -7,4 +7,5 @@ data:
   policy.csv: |
     g, sarthak, role:readonly
   policy.default: role:readonly
-  accounts.sarthak: apiKey123   # <-- password/apiKey for Sarthak
+  # no need for a separate account entry here; credentials are in argocd-cm
+  accounts.sarthak: password123

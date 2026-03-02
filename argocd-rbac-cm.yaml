@@ -5,7 +5,8 @@ metadata:
   namespace: argocd
 data:
   # Local users
-  accounts.sarthak: apiKey,password123
+  # Set a simple password for Sarthak; can also be an API key
+  accounts.sarthak: password123
 
   # Optional: customize login banner
   application.instanceLabelKey: argocd.argoproj.io/instance

@@ -5,6 +5,6 @@ metadata:
   namespace: argocd
 data:
   policy.csv: |
-    p, role:readonly, applications, get, */*, allow
     g, sarthak, role:readonly
-  scopes: '[groups]'
+  policy.default: role:readonly
+  accounts.sarthak: apiKey123   # <-- password/apiKey for Sarthak

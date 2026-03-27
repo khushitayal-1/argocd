@@ -1,6 +1,46 @@
 stages:
+  - security 
   - build
 
+# 🔍 Unicode Malware Detection
+unicode_scan:
+  stage: security
+  image: alpine:latest
+  script:
+    - apk add --no-cache grep
+    - echo "Scanning for invisible Unicode characters..."
+    - |
+      if grep -rP '[\x{FE00}-\x{FE0F}\x{E0100}-\x{E01EF}]' --include="*.py" --include="*.js" .; then
+        echo "❌ Suspicious Unicode detected!"
+        exit 1
+      else
+        echo "✅ No Unicode anomalies"
+      fi
+
+# 🔍 Dangerous Code Pattern Scan
+code_pattern_scan:
+  stage: security
+  image: alpine:latest
+  script:
+    - apk add --no-cache grep
+    - echo "Checking for dangerous functions..."
+    - |
+      if grep -rE "exec\(|eval\(|compile\(" .; then
+        echo "⚠️ Dangerous functions found"
+        exit 1
+      else
+        echo "✅ No dangerous patterns"
+      fi
+
+# 🔍 GlassWorm Hunter
+glassworm_scan:
+  stage: security
+  image: node:20
+  script:
+    - npm install -g glassworm-hunter
+    - glassworm-hunter scan --pip-scan --no-extensions .
+
+    
 build_order:
   stage: build
   image: docker:24
@@ -15,4 +55,4 @@ build_user:
   services:
     - docker:24-dind
   script:
-    - docker build -t user-service ./user-service
+    - docker build -t user-service ./user-service 
